@@ -80,5 +80,28 @@ class ProductItemModel {
         $stmt->bindParam(':idProduct', $idProduct);
         return $stmt->execute();
     }   
+
+    public function decrementProductQuantity($idProductItem, $quantity) {
+        // Bước 1: Lấy số lượng sản phẩm hiện tại
+        $sql = "SELECT quantityProduct FROM product_variants WHERE idVariant = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':id', $idProductItem, PDO::PARAM_INT);
+        $stmt->execute();
+        $currentQuantity = $stmt->fetchColumn();  // Lấy số lượng hiện tại
+    
+        // Bước 2: Kiểm tra xem số lượng hiện tại có đủ để trừ không
+        if ($currentQuantity >= $quantity) {
+            // Bước 3: Nếu đủ, thực hiện trừ số lượng
+            $sql = "UPDATE product_variants SET quantityProduct = quantityProduct - :quantity WHERE idVariant = :id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':quantity', $quantity, PDO::PARAM_INT);
+            $stmt->bindParam(':id', $idProductItem, PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            // Bước 4: Nếu không đủ số lượng, ném ra lỗi hoặc xử lý phù hợp
+            throw new Exception("Không đủ số lượng sản phẩm trong kho.");
+        }
+    }
+    
 }
 ?>

@@ -6,6 +6,7 @@
             <th>ID</th>
             <th>Name</th>
             <th>Email</th>
+            <th>Phone</th>
             <th>Password</th>
             <th>Role</th>
             <th>Status</th>
@@ -18,11 +19,11 @@
             <td><?= $user['id'] ?></td>
             <td><?= $user['name'] ?></td>
             <td><?= $user['email'] ?></td>
+            <td><?= $user['phone'] ?></td>
             <td><?= $user['password'] ?></td>
             <td><?= $user['role'] ?></td>
             <td><?= $user['status'] ?></td>
             <td>
-                <a href="/users/<?= $user['id'] ?>" class="btn btn-info btn-sm">View</a>
                 <a href="/users/edit/<?= $user['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
                 <a href="/users/delete/<?= $user['id'] ?>" class="btn btn-danger btn-sm">Delete</a>
             </td>

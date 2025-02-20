@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . '/vendor/autoload.php';
 require_once "controller/ProductController.php";
 require_once "controller/CategoryController.php";
 require_once "controller/UserController.php";
@@ -39,6 +40,7 @@ $router->addMiddleware(function () {
     }
     return true;
 });
+$router->addRoute("/", [$productController, "home"]);
 
 $router->addRoute("/products", [$productController, "index"]);
 $router->addRoute("/products/create", [$productController, "create"]);
@@ -55,9 +57,11 @@ $router->addRoute("/categories/delete/{id}", [$categoryController, "delete"]);
 
 $router->addRoute("/users", [$userController, "index"]);
 $router->addRoute("/users/create", [$userController, "create"]);
-$router->addRoute("/users/{id}", [$userController, "show"]);
+$router->addRoute("/account", [$userController, "updateAccount"]);
 $router->addRoute("/users/edit/{id}", [$userController, "edit"]);
 $router->addRoute("/users/delete/{id}", [$userController, "delete"]);
+$router->addRoute("/users/updateAccount", [$userController,"updateAccount"]);
+$router->addRoute("/users/updateAccountPassword", [$userController,"updateAccountPassword"]);
 
 $router->addRoute("/login", [$userController, "login"]);
 $router->addRoute("/register", [$userController, "register"]);
@@ -91,10 +95,13 @@ $router->addRoute("/order/{id}", [$orderController,"showOrderItem"]);
 $router->addRoute("/orders/create", [$orderController,"create"]);
 $router->addRoute("/order/edit/{id}", [$orderController,"statusUpdate"]);
 $router->addRoute("/order/delete/{id}", [$orderController,"delete"]);
-$router->addRoute("/payment/vnpay", [$orderController, "vnpayPayment"]);
-$router->addRoute("/payment/vnpay/return", [$orderController, "vnpayReturn"]);
+$router->addRoute("/payment/vnpay_payment", [$orderController, "vnpay_payment"]);
+$router->addRoute("/payment/vnpay/return", [$orderController, "vnpay_return"]);
 $router->addRoute("/payment/vnpay/cancel", [$orderController, "vnpayCancel"]);
-
+$router->addRoute("/myOrder", [$orderController,"getOrdersBuyed"]);
+$router->addRoute("/myOrderItem/{idOrder}", [$orderController,"getOrderItemsBuyed"]);
+$router->addRoute("/trackOrder", [$orderController,"trackOrder"]);
+$router->addRoute("/cancelOrder/{id}", [$orderController,"cancelOrder"]);
 
 $router->dispatch();
 ?>

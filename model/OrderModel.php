@@ -27,7 +27,13 @@ class OrderModel {
         }
             return $result;
     }
-
+    public function getAllOrderByIdUser($idUser){  
+      $query = 'SELECT * FROM orders WHERE idUser = :idUser';
+      $stmt = $this->conn->prepare($query);
+      $stmt->bindParam(':idUser', $idUser);
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
     public function getIdOrderByIdUser($idUser){
         $query = "SELECT id FROM orders WHERE idUser = :idUser";
         $stmt = $this->conn->prepare($query);
@@ -93,6 +99,29 @@ class OrderModel {
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':status', $status);
         return $stmt->execute();
+    }
+
+    public function getStatusById($id) {
+        $query = "SELECT status FROM orders WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function getOrderByCode($code) {
+        $query = "SELECT * FROM orders WHERE code = :code";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':code', $code);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function cancelOrder($id) {
+        $query = 'UPDATE orders SET status = "cancelled" WHERE id = :id';
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
     }
 }
 ?>

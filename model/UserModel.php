@@ -24,23 +24,25 @@ class UserModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function createUser($name, $email, $password, $role, $status) {
-        $query = "INSERT INTO users (name, email, password, role, status) VALUES (:name, :email, :password, :role, :status)";
+    public function createUser($name, $email, $phone, $password, $role, $status) {
+        $query = "INSERT INTO users (name, email, phone, password, role, status) VALUES (:name, :email, :password, :role, :status)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':phone', $phone);
         $stmt->bindParam(':password', $password);
         $stmt->bindParam(':role', $role);
         $stmt->bindParam(':status', $status);
-        return $stmt->execute();
+        return $this->conn->lastInsertId();
     }
 
-    public function updateUser($id, $name, $email, $password, $role, $status) {
-        $query = "UPDATE users SET name = :name, email = :email, password = :password, role = :role, status = :status WHERE id = :id";
+    public function updateUser($id, $name, $email, $phone, $password, $role, $status) {
+        $query = "UPDATE users SET name = :name, email = :email, phone = :phone, password = :password, role = :role, status = :status WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':phone', $phone);
         $stmt->bindParam(':password', $password);
         $stmt->bindParam(':role', $role);
         $stmt->bindParam(':status', $status);
@@ -61,23 +63,15 @@ class UserModel {
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':password', $password);
         $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($user) {
-          $_SESSION['user'] = [
-                'id' => $user['id'],
-                'name' => $user['name'],
-                'email' => $user['email'],
-            ];
-            return true;
-        }
-        return false;
+        return $stmt->rowCount();
     }
 
-    public function register($name, $email, $password) {
-        $query = "INSERT INTO users (name, email, password) VALUES (:name, :email, :password)";
+    public function register($name, $email, $phone, $password) {
+        $query = "INSERT INTO users (name, email , phone, password) VALUES (:name, :email, :phone, :password)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':phone', $phone);
         $stmt->bindParam(':password', $password);
         return $stmt->execute();
     }
@@ -136,6 +130,34 @@ class UserModel {
         $sql = "UPDATE users SET otp = NULL, otp_expired_at = NULL WHERE email = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$email]);
+    }
+
+    public function updateAccount($idUser, $name, $email, $phone, $avatarPath){
+        $query = "UPDATE users SET name = :name, email = :email, phone = :phone, avatar = :avatar WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $idUser);
+        $stmt->bindParam(':name', $name);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':phone', $phone);
+        $stmt->bindParam(':avatar', $avatarPath);
+        return $stmt->execute();        
+ 
+    }
+
+    public function getUserByEmailUser($email) {
+        $query = 'SELECT * FROM users WHERE email = :email';
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function updateAccountPassword($idUser, $newPassword) {
+        $query = 'UPDATE users SET password = :password WHERE id = :id';
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $idUser);
+        $stmt->bindParam(':password', $newPassword);    
+        return $stmt->execute();
     }
 }
 ?>

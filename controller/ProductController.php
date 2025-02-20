@@ -24,6 +24,10 @@ class ProductController {
         $this->colorModel = new ColorModel();
     }
 
+    public function home() {    
+        $products = $this->productModel->getAllProducts();
+        renderView("view/home.php",  compact('products'), "Product List");
+    }
     public function index() {
         $products = $this->productModel->getAllProducts();
         renderView("view/products/product_list.php",  compact('products'), "Product List");
@@ -167,6 +171,5 @@ class ProductController {
         $productItems = $this->productItemModel->getProductItemByIdProduct($id);
         renderView("view/products/variants/productVariant_list.php", compact('productItems'), "Product Detail");
     }
-
 
 }
