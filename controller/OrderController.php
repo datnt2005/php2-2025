@@ -445,5 +445,53 @@ class OrderController {
             return false;
         }
     }
+
+    public function buyAgain($idOrder) {
+        if (!isset($_SESSION['user']['id'])) {
+            $_SESSION['error'] = "Bạn cần đăng nhập để mua lại.";
+            header("Location: /login");
+            exit;
+        }
+    
+        $idUser = $_SESSION['user']['id'];
+        $status = 1;
+        $idCart = $this->cartModel->getIdCartByIdUser($idUser);
+        
+        if (empty($idCart)) {
+            $idCart = $this->cartModel->createCart($idUser, $status);
+        } else {
+            $idCart = $idCart['id'];
+        }
+    
+        $orderItems = $this->orderItemModel->getOrderItemByIdOrder($idOrder);
+    
+        if (empty($orderItems)) {
+            $_SESSION['error'] = "Không tìm thấy sản phẩm trong đơn hàng.";
+            header("Location: /order");
+            exit;
+        }
+    
+        foreach ($orderItems as $orderItem) {
+            $product = $this->productModel->getProductById($orderItem['idProduct']);
+    
+            if ($product) {
+                // Kiểm tra xem sản phẩm còn hàng không
+                $stock = $this->productItemModel->getProductStock($orderItem['idProductItem']);
+                if ($stock < $orderItem['quantity']) {
+                    $_SESSION['error'] = "Sản phẩm {$product['name']} không đủ hàng.";
+                    header("Location: /myOrder");
+                    exit;
+                }
+    
+                // Thêm sản phẩm vào giỏ hàng
+                $this->cartItemModel->createCartItem($idCart, $orderItem['idProduct'], $orderItem['idProductItem'], $orderItem['sku'], $orderItem['quantity'], $orderItem['price']);
+            }
+        }
+    
+        $_SESSION['success'] = "Sản phẩm đã được thêm vào giỏ hàng!";
+        header("Location: /checkout");
+        exit;
+    }
+    
     
 }

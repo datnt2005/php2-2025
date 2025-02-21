@@ -102,6 +102,7 @@ $router->addRoute("/myOrder", [$orderController,"getOrdersBuyed"]);
 $router->addRoute("/myOrderItem/{idOrder}", [$orderController,"getOrderItemsBuyed"]);
 $router->addRoute("/trackOrder", [$orderController,"trackOrder"]);
 $router->addRoute("/cancelOrder/{id}", [$orderController,"cancelOrder"]);
+$router->addRoute("/buyAgain/{id}", [$orderController,"buyAgain"]);
 
 $router->dispatch();
 ?>

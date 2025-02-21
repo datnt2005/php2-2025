@@ -33,7 +33,7 @@
                                                     <?= $order['status'] ?>
                                                 </td>
                                                 <td>
-                                                    <a href="shop.php" class="btn btn-primary">Mua lại</a>
+                                                    <a href="/buyAgain/<?php echo $order['id']; ?>" class="btn btn-primary">Mua lại</a>
                                                 </td>
                                                 <?php if ($order['status'] == "pending") : ?>
                                                     <td><a href="javascript:void(0);" onclick="cancelOrder('<?php echo $order['id']; ?>')" class="btn btn-danger">Hủy đơn hàng</a>

@@ -103,5 +103,12 @@ class ProductItemModel {
         }
     }
     
+    public function getProductStock($idProductItem) {
+        $query = "SELECT quantityProduct FROM product_variants WHERE idVariant = :idProductItem";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':idProductItem', $idProductItem);
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
 }
 ?>

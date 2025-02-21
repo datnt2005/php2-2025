@@ -59,7 +59,7 @@
                                     </div>
                                     <ul>
                                         <li class="fs-6 fw-bold text-danger list-unstyled text-center" >
-                                            <?= $product['productPrice'] ?> VNĐ
+                                            <?= number_format($product['productPrice']); ?> VNĐ
                                         </li>
                                     </ul>
                                 </div>
