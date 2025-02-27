@@ -1,12 +1,19 @@
 <?php
 
-function renderView($view, $data = [], $title = "My App") {
+function renderViewUser($view, $data = [], $title = "My App") {
     // ra bien tu bang thanh don
     extract($data);
     ob_start();
     require $view;
     $content = ob_get_clean();
-    require "view/layouts/master.php";
+    require "view/layouts/master-user.php";
 }
 
+function renderViewAdmin($view, $data = [], $title = "My App") {
+    extract($data);
+    ob_start();
+    require $view;
+    $content = ob_get_clean();
+    require "view/layouts/master-admin.php";
+}
 ?>

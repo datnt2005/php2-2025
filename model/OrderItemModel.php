@@ -100,5 +100,62 @@ class OrderItemModel {
         return $stmt->execute();    
     }
 
+    public function getOrderItemsStatistics() {
+        $query = "
+            SELECT 
+                SUM(oi.price * oi.quantity) AS total_revenue,    -- Tổng doanh thu từ sản phẩm đã bán
+                SUM(oi.quantity) AS total_sold,                 -- Tổng số sản phẩm đã bán
+                (SELECT SUM(quantityProduct) FROM product_variants) AS total_stock, -- Tổng số sản phẩm tồn kho
+                (SELECT p.name 
+                 FROM order_items oi 
+                 JOIN products p ON oi.idProduct = p.id 
+                 JOIN product_variants pv ON oi.idProductItem = pv.idVariant
+                 GROUP BY oi.idProduct
+                 ORDER BY SUM(oi.quantity) DESC 
+                 LIMIT 1) AS best_selling_product  -- Sản phẩm bán chạy nhất
+            FROM order_items oi";
+    
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    public function getBestSellingProducts() {
+        $sql = "SELECT p.name, SUM(oi.quantity) AS sold_count 
+                FROM order_items oi 
+                JOIN products p ON oi.idProduct = p.id 
+                GROUP BY p.id, p.name 
+                ORDER BY sold_count DESC 
+                LIMIT 5";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        
+        $bestSellingProducts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+        if (!$bestSellingProducts) {
+            return [];
+        }
+    
+        return $bestSellingProducts;
+    }
+    
+    
+    public function getTotalSoldProducts() {
+        $sql = "SELECT SUM(quantity) AS total_sold FROM order_items";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchColumn() ?? 0; // Trả về 0 nếu không có dữ liệu
+    }
+    public function getMonths() {
+        $sql = "SELECT MONTH(created_at) AS month, SUM(price * quantity) AS total_revenue 
+                FROM order_items 
+                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH) 
+                GROUP BY MONTH(created_at)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+
 }
 ?>

@@ -12,13 +12,10 @@ class SizeController {
     public function index() {
         $sizes = $this->sizeModel->getAllSizes();
         //compact: gom bien dien thanh array
-        renderView("view/sizes/size_list.php", compact('sizes'), "Sizes List");
+        renderViewAdmin("view/admin/sizes/size_list.php", compact('sizes'), "Sizes List");
     }
 
-    public function show($id) {
-        $size = $this->sizeModel->getSizeById($id);
-        renderView("view/sizes/size_detail.php", compact('size'), "Size Detail");
-    }
+
 
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -30,7 +27,7 @@ class SizeController {
             </script>";
             // header("Location: /categories");
         } else {
-            renderView("view/sizes/size_create.php", [], "Create size");
+            renderViewAdmin("view/admin/sizes/size_create.php", [], "Create size");
         }
     }
 
@@ -42,7 +39,7 @@ class SizeController {
             header("Location: /sizes");
         } else {
             $size = $this->sizeModel->getSizeById($id);
-            renderView("view/sizes/size_edit.php", compact('size'), "Edit Size");
+            renderViewAdmin("view/admin/sizes/size_edit.php", compact('size'), "Edit Size");
         }
     }
 

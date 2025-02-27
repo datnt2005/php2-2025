@@ -110,5 +110,36 @@ class ProductItemModel {
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+
+    public function getStockData() {
+        $query = "SELECT p.name, pv.quantityProduct as stock 
+                  FROM products p 
+                  INNER JOIN product_variants pv ON p.id = pv.idProduct";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+ 
+    public function getTotalStock() {
+        $query = "SELECT SUM(quantityProduct) FROM product_variants";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_COLUMN);
+    }
+    
+    public function getStockCounts() {
+        $query = "SELECT p.name AS product_name, SUM(pv.quantityProduct) AS stock_count
+                  FROM product_variants pv
+                  JOIN products p ON pv.idProduct = p.id
+                  GROUP BY p.id, p.name
+                  ORDER BY stock_count DESC"; // Sắp xếp giảm dần
+    
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    
+    
 }
 ?>

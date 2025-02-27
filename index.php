@@ -8,6 +8,8 @@ require_once "controller/SizeController.php";
 require_once "controller/ColorController.php";
 require_once "controller/CartController.php";
 require_once "controller/OrderController.php";
+require_once "controller/DiscountController.php";
+require_once "controller/BannerController.php";
 require_once "router/Router.php";
 require_once "middleware.php";
 
@@ -20,48 +22,32 @@ $sizeController = new SizeController();
 $colorController = new ColorController();
 $cartController = new CartController();
 $orderController = new OrderController();
+$discountController = new DiscountController();
+$bannerController = new BannerController();
 
 $router->addMiddleware('logRequest');
-$router->addMiddleware(function () { 
-    $currentRoute = $_SERVER['REQUEST_URI'];
 
-    // Loại trừ các route không yêu cầu đăng nhập
-    $excludedRoutes = ['/login', '/register', '/forgotPassword', '/resetPassword', '/google/login', '/google/callback'];
-    foreach ($excludedRoutes as $route) {
-        if (strpos($currentRoute, $route) === 0) {
-            return true;
-        }
-    }
-
-    // Áp dụng middleware isUser
-    if (!isset($_SESSION['user'])) {
-        header("Location: /login");
-        exit;
-    }
-    return true;
-});
 $router->addRoute("/", [$productController, "home"]);
 
-$router->addRoute("/products", [$productController, "index"]);
-$router->addRoute("/products/create", [$productController, "create"]);
+$router->addRoute("/products", [$productController, "index"],['isAdmin']);
+$router->addRoute("/products/create", [$productController, "create"],['isAdmin']);
 $router->addRoute("/products/{id}", [$productController, "show"]);
-$router->addRoute("/product-variants/{id}", [$productController, "listVariant"]);
-$router->addRoute("/products/edit/{id}", [$productController, "edit"]);
-$router->addRoute("/products/delete/{id}", [$productController, "delete"]);
+$router->addRoute("/product-variants/{id}", [$productController, "listVariant"],['isAdmin']);
+$router->addRoute("/products/edit/{id}", [$productController, "edit"],['isAdmin']);
+$router->addRoute("/products/delete/{id}", [$productController, "delete"],['isAdmin']);
 
-$router->addRoute("/categories", [$categoryController, "index"]);
-$router->addRoute("/categories/create", [$categoryController, "create"]);
-$router->addRoute("/categories/{id}", [$categoryController, "show"]);
-$router->addRoute("/categories/edit/{id}", [$categoryController, "edit"]);
-$router->addRoute("/categories/delete/{id}", [$categoryController, "delete"]);
+$router->addRoute("/categories", [$categoryController, "index"],['isAdmin']);
+$router->addRoute("/categories/create", [$categoryController, "create"],['isAdmin']);
+$router->addRoute("/categories/edit/{id}", [$categoryController, "edit"],['isAdmin']);
+$router->addRoute("/categories/delete/{id}", [$categoryController, "delete"],['isAdmin']);
 
-$router->addRoute("/users", [$userController, "index"]);
-$router->addRoute("/users/create", [$userController, "create"]);
-$router->addRoute("/account", [$userController, "updateAccount"]);
-$router->addRoute("/users/edit/{id}", [$userController, "edit"]);
-$router->addRoute("/users/delete/{id}", [$userController, "delete"]);
-$router->addRoute("/users/updateAccount", [$userController,"updateAccount"]);
-$router->addRoute("/users/updateAccountPassword", [$userController,"updateAccountPassword"]);
+$router->addRoute("/users", [$userController, "index"],['isAdmin']);
+$router->addRoute("/users/create", [$userController, "create"],['isAdmin']);
+$router->addRoute("/account", [$userController, "updateAccount"],['isUser']);
+$router->addRoute("/users/edit/{id}", [$userController, "edit"],['isAdmin']);
+$router->addRoute("/users/delete/{id}", [$userController, "delete"],['isAdmin']);
+$router->addRoute("/users/updateAccount", [$userController,"updateAccount"],['isUser']);
+$router->addRoute("/users/updateAccountPassword", [$userController,"updateAccountPassword"],['isUser']);
 
 $router->addRoute("/login", [$userController, "login"]);
 $router->addRoute("/register", [$userController, "register"]);
@@ -71,38 +57,53 @@ $router->addRoute("/resetPassword", [$userController, "resetPassword"]);
 $router->addRoute('/google/login', [$userController, 'googleLogin']);
 $router->addRoute('/google/callback', [$userController, 'googleCallback']);
 
-$router->addRoute('/sizes', [$sizeController, 'index']);
-$router->addRoute('/sizes/create', [$sizeController, 'create']);
-$router->addRoute('/sizes/{id}', [$sizeController, 'show']);
-$router->addRoute('/sizes/edit/{id}', [$sizeController, 'edit']);
-$router->addRoute('/sizes/delete/{id}', [$sizeController, 'delete']);
+$router->addRoute('/sizes', [$sizeController, 'index'],['isAdmin']);
+$router->addRoute('/sizes/create', [$sizeController, 'create'],['isAdmin']);
+$router->addRoute('/sizes/edit/{id}', [$sizeController, 'edit'],['isAdmin']);
+$router->addRoute('/sizes/delete/{id}', [$sizeController, 'delete'],['isAdmin']);
 
-$router->addRoute('/colors', [$colorController, 'index']);
-$router->addRoute('/colors/create', [$colorController, 'create']);
-$router->addRoute('/colors/{id}', [$colorController, 'show']);
-$router->addRoute('/colors/edit/{id}', [$colorController, 'edit']);
-$router->addRoute('/colors/delete/{id}', [$colorController, 'delete']);
+$router->addRoute('/colors', [$colorController, 'index'],['isAdmin']);
+$router->addRoute('/colors/create', [$colorController, 'create'],['isAdmin']);
+$router->addRoute('/colors/edit/{id}', [$colorController, 'edit'],['isAdmin']);
+$router->addRoute('/colors/delete/{id}', [$colorController, 'delete'],['isAdmin']);
 
 $router->addRoute("/shop", [$productController, "shop"]);
+$router->addRoute("/filterProduct", [$productController, "filterProduct"]);
 $router->addRoute("/cart", [$cartController, "index"]);
 $router->addRoute("/cart/create", [$cartController,"create"]);
-$router->addRoute("/cart/delete/{idCartItem}", [$cartController,"deleteCartItem"]);
-$router->addRoute("/cart/update", [$cartController, "updateCartItem"]);
+$router->addRoute("/cart/delete/{idCartItem}", [$cartController,"deleteCartItem"],['isUser']);
+$router->addRoute("/cart/update", [$cartController, "updateCartItem"],['isUser']);
 
-$router->addRoute("/order", [$orderController, "index"]);
-$router->addRoute("/checkout", [$orderController,"showCheckout"]);
-$router->addRoute("/order/{id}", [$orderController,"showOrderItem"]);
-$router->addRoute("/orders/create", [$orderController,"create"]);
-$router->addRoute("/order/edit/{id}", [$orderController,"statusUpdate"]);
-$router->addRoute("/order/delete/{id}", [$orderController,"delete"]);
-$router->addRoute("/payment/vnpay_payment", [$orderController, "vnpay_payment"]);
-$router->addRoute("/payment/vnpay/return", [$orderController, "vnpay_return"]);
-$router->addRoute("/payment/vnpay/cancel", [$orderController, "vnpayCancel"]);
-$router->addRoute("/myOrder", [$orderController,"getOrdersBuyed"]);
-$router->addRoute("/myOrderItem/{idOrder}", [$orderController,"getOrderItemsBuyed"]);
+$router->addRoute("/order", [$orderController, "index"],['isAdmin']);
+$router->addRoute("/checkout", [$orderController,"showCheckout"],['isUser']);
+$router->addRoute("/order/{id}", [$orderController,"showOrderItem"],['isAdmin']);
+$router->addRoute("/orders/create", [$orderController,"create"],['isUser']);
+$router->addRoute("/order/edit/{id}", [$orderController,"statusUpdate"],['isAdmin']);
+$router->addRoute("/order/delete/{id}", [$orderController,"delete"],['isAdmin']);
+$router->addRoute("/payment/vnpay_payment", [$orderController, "vnpay_payment"],['isAdmin']);
+$router->addRoute("/payment/vnpay/return", [$orderController, "vnpay_return"],['isAdmin']);
+$router->addRoute("/payment/vnpay/cancel", [$orderController, "vnpayCancel"],['isAdmin']);
+$router->addRoute("/myOrder", [$orderController,"getOrdersBuyed"],['isUser']);
+$router->addRoute("/myOrderItem/{idOrder}", [$orderController,"getOrderItemsBuyed"],['isUser']);
 $router->addRoute("/trackOrder", [$orderController,"trackOrder"]);
-$router->addRoute("/cancelOrder/{id}", [$orderController,"cancelOrder"]);
-$router->addRoute("/buyAgain/{id}", [$orderController,"buyAgain"]);
+$router->addRoute("/cancelOrder/{id}", [$orderController,"cancelOrder"],['isUser']);
+$router->addRoute("/buyAgain/{id}", [$orderController,"buyAgain"],['isUser']);
+$router->addRoute('/applyDiscount', [$orderController,'checkDiscount'],['isUser']);
+$router->addRoute('/cancelDiscount', [$orderController,'cancelDiscount'],['isUser']);
+
+$router->addRoute('/discounts', [$discountController,'index'],['isAdmin']);
+$router->addRoute('/discounts/create', [$discountController,'create'],['isAdmin']);
+$router->addRoute('/discounts/{id}', [$discountController,'edit'],['isAdmin']);
+$router->addRoute('/discounts/delete/{id}', [$discountController,'delete'],['isAdmin']);
+
+$router->addRoute('/banners', [$bannerController,'index'],['isAdmin']);
+$router->addRoute('/banners/create', [$bannerController,'create'],['isAdmin']);
+$router->addRoute('/banners/{id}', [$bannerController,'edit'],['isAdmin']);
+$router->addRoute('/banners/delete/{id}', [$bannerController,'delete'],['isAdmin']);
+
+
+
+$router->addRoute('/admin', [$orderController,'revenue'],['isAdmin']);
 
 $router->dispatch();
 ?>

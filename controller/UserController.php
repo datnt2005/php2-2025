@@ -25,14 +25,9 @@ class UserController {
 
     public function index() {
         $users = $this->userModel->getAllUsers();
-        renderView("view/users/user_list.php", compact('users'), "User List");
+        renderViewAdmin("view/admin/users/user_list.php", compact('users'), "User List");
     }
 
-    // public function show() {
-    //     $id = $_SESSION["user"]["id"];
-    //     $user = $this->userModel->getUserById($id);
-    //     renderView("view/users/user_detail.php", compact('user'), "User Detail");
-    // }
 
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -46,7 +41,7 @@ class UserController {
             $this->userModel->createUser($name, $email, $phone, $password, $role, $status);
             header("Location: /users");
         } else {
-            renderView("view/users/user_create.php", [], "Create User");
+            renderViewAdmin("view/admin/users/user_create.php", [], "Create User");
         }
     }
 
@@ -63,7 +58,7 @@ class UserController {
             header("Location: /users");
         } else {
             $user = $this->userModel->getUserById($id);
-            renderView("view/users/user_edit.php", compact('user'), "Edit User");
+            renderViewAdmin("view/admin/users/user_edit.php", compact('user'), "Edit User");
         }
     }
 
@@ -87,7 +82,7 @@ class UserController {
                 $error = "Registration failed. Email may already be in use.";
             }
         }
-        renderView("view/auth/register.php", compact('error'), "Register");
+        renderViewUser("view/user/auth/register.php", compact('error'), "Register");
     }
 
     public function login() {
@@ -100,13 +95,13 @@ class UserController {
             if ($user) {
                 $users = $this->userModel->getUserByEmailUser($email);
                 $_SESSION['user'] = $users;
-                header("Location: /shop");
+                header("Location: /");
                 exit;
             } else {
                 $error = "Invalid email or password.";
             }
         }
-        renderView("view/auth/login.php", compact('error'), "Login");
+        renderViewUser("view/user/auth/login.php", compact('error'), "Login");
     }
 
     public function logout() {
@@ -122,7 +117,7 @@ class UserController {
         }
 
         $user = $_SESSION['user'];
-        renderView("view/auth/dashboard.php", compact('user'), "Dashboard");
+        renderViewUser("view/user/auth/dashboard.php", compact('user'), "Dashboard");
     }
 
     public function forgotPassword() {
@@ -166,7 +161,7 @@ class UserController {
             }
         }
 
-        renderView("view/auth/forgotPassword.php", compact('error', 'success'), "Forgot Password");
+        renderViewUser("view/user/auth/forgotPassword.php", compact('error', 'success'), "Forgot Password");
     }
 
     public function resetPassword() {
@@ -195,7 +190,7 @@ class UserController {
             }
         }
 
-        renderView("view/auth/resetPassword.php", compact('error', 'success'), "Reset Password");
+        renderViewUser("view/user/auth/resetPassword.php", compact('error', 'success'), "Reset Password");
     }
 
     public function googleLogin() {
@@ -346,7 +341,7 @@ class UserController {
             // Lấy thông tin user hiện tại
             $idUser = $_SESSION['user']['id'];
             $user = $this->userModel->getUserById($idUser);
-            renderView("view/users/user_detail.php", compact('user'), "Edit User");
+            renderViewUser("view/admin/users/user_detail.php", compact('user'), "Edit User");
         }
     }
 
@@ -394,7 +389,7 @@ class UserController {
             // Lấy thông tin user hiện tại
             $idUser = $_SESSION['user']['id'];
             $user = $this->userModel->getUserById($idUser);
-            renderView("view/users/account_password.php", compact('user'), "Edit User");
+            renderViewUser("view/admin/users/account_password.php", compact('user'), "Edit User");
         }
     }
     

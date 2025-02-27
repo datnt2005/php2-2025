@@ -6,6 +6,9 @@ require_once "model/CartModel.php";
 require_once "model/CartItemModel.php";
 require_once "model/ProductModel.php";
 require_once "model/ProductItemModel.php";
+require_once "model/SizeModel.php";
+require_once "model/ColorModel.php";
+
 require_once "view/helpers.php";
 
 class CartController {
@@ -13,15 +16,59 @@ class CartController {
     private $cartItemModel;
     private $productModel;
     private $productItemModel;
+    private $sizeModel;
+    private $colorModel;
     public function __construct() {
         $this->cartModel = new CartModel();
         $this->cartItemModel = new CartItemModel();
         $this->productModel = new ProductModel();
         $this->productItemModel = new ProductItemModel();
+        $this->sizeModel = new SizeModel();
+        $this->colorModel = new ColorModel();
     }
 
+    // public function index() {
+    //     $idUser = $_SESSION['user']['id'] ?? null;
+    //     $cartItems = [];
+    //     $totalQuantity = 0;
+    //     $totalPrice = 0;
+
+    //     if ($idUser) {
+    //         $idCart = $this->cartModel->getIdCartByIdUser($idUser);
+    //         if ($idCart) {
+    //             $cartItems = $this->cartItemModel->getCartItemByIdCart($idCart['id']);
+    //         }
+    //     } else {
+    //         $cartItems = $_SESSION['cart'] ?? [];
+    //     }
+
+    //     foreach ($cartItems as &$cartItem) {
+    //         $product = $this->productModel->getProductById($cartItem['idProduct']);
+    //         $cartItem['productName'] = $product['name'] ?? 'Unknown';
+    //         $cartItem['productImage'] = $product['image'] ?? 'default.jpg';
+    //         $totalQuantity += $cartItem['quantity'];
+    //         $totalPrice += $cartItem['price'] * $cartItem['quantity'];
+    //     }
+    //     foreach ($cartItems as &$cartItem) {
+    //         $product = $this->productModel->getProductById($cartItem['idProduct']);
+    //         $productItem = $this->productItemModel->getProductItemById($cartItem['idProductItem']);
+    //         $color = $this ->colorModel->getColorById($productItem['idColor']);
+    //         $size = $this ->sizeModel->getSizeById($productItem['idSize']);
+    //         $cartItem['idCartItem'] = $cartItem['id'] ?? 0;
+    //         $cartItem['name'] = $product['productName'] ?? 'Unknown';
+    //         $cartItem['nameSize'] = $size['nameSize'] ?? 'Unknown';
+    //         $cartItem['nameColor'] = $color['nameColor'] ?? 'Unknown';
+    //         $cartItem['productImage'] = $product['productImage'] ?? 'default.jpg';
+    //         $cartItem['price'] = $product['productPrice'] ?? 0;
+    //         $cartItem['quantity'] = $cartItem['quantity'] ?? 0;
+    //         $totalQuantity += $cartItem['quantity'];
+    //         $totalPrice += $cartItem['price'] * $cartItem['quantity'];
+    //     }
+
+    //     renderViewUser("view/user/cart.php", compact('cartItems', 'totalQuantity', 'totalPrice'), "Cart List");
+    // }
     public function index() {
-        $idUser = $_SESSION['user']['id'];
+        $idUser = $_SESSION['user']['id'] ?? null;
         $carts = $this->cartModel->getCartsByUserId($idUser);
         $idCart = $this->cartModel->getIdCartByIdUser($idUser);
 
@@ -40,10 +87,12 @@ class CartController {
             $productPrice = $this->productModel->getProductById($cartItem['idProduct']);
             $totalPrice += $cartItem['price'] * $cartItem['quantity'];
         }
-    
-        renderView("view/cart.php", compact('carts', 'cartItems', 'totalQuantity', 'totalPrice', 'productPrices'), "Cart List");
-    }
+        if(empty($idUser)){
+            $cartItems = $_SESSION['cart'] ?? [];
 
+        }
+        renderViewUser("view/user/cart.php", compact('carts', 'cartItems', 'totalQuantity', 'totalPrice', 'productPrices'), "Cart List");
+    }
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idProduct = $_POST['idProduct'];
@@ -67,20 +116,25 @@ class CartController {
                 return;
             }
             // Kiểm tra xem người dùng có đăng nhập không
-            if (!isset($_SESSION['user'])) {
-                // Lưu vào session nếu chưa đăng nhập
-                $cartItem = [
-                    'idProduct' => $idProduct,
-                    'idSize' => $idSize,
-                    'idColor' => $idColor,
-                    'quantity' => $quantity,
-                    'idProductItem' => $idProductItem,
-                    'sku' => $sku
-                ];
-    
-                $_SESSION['cart'][] = $cartItem;
-                echo "Sản phẩm đã được thêm vào giỏ hàng!";
-                return;
+            // if (!isset($_SESSION['user'])) {
+            //     $cartItem = [
+            //         'idProduct' => $idProduct,
+            //         'idSize' => $idSize,
+            //         'idColor' => $idColor,
+            //         'quantity' => $quantity,
+            //         'idProductItem' => $idProductItem,
+            //         'sku' => $sku,
+            //         'price' => $price
+            //     ];
+
+            //     $_SESSION['cart'][] = $cartItem;
+            //     echo "Sản phẩm đã được thêm vào giỏ hàng!";
+            //     return;
+            // }
+            if(!isset($_SESSION['user'])) {
+                $_SESSION['error'] = "Bạn cần đăng nhập để mua hàng!";
+                header("Location: /products/$idProduct");
+                exit;
             }
     
             $idUser = $_SESSION['user']['id'];
@@ -101,7 +155,7 @@ class CartController {
                 $quantityUpdate = $quantityOld + $quantity;
                 $this->cartItemModel->updateQuantityCartItem($cartItemId, $quantityUpdate);
             }
-
+            $_SESSION['success'] = "Sản phẩm đã được thêm vào giỏ hàng!";
             header("Location: /products/$idProduct");
             exit();
 

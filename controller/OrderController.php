@@ -9,6 +9,7 @@ require_once "model/ProductModel.php";
 require_once "model/ProductItemModel.php";
 require_once "model/CartModel.php";
 require_once "model/CartItemModel.php";
+require_once "model/DiscountModel.php";
 require_once "view/helpers.php";
 
 use Dotenv\Dotenv;
@@ -22,6 +23,7 @@ class OrderController {
     private $productItemModel;
     private $cartModel;
     private $cartItemModel;
+    private $discountModel;
     
     public function __construct() {
         $this->orderModel = new OrderModel();
@@ -30,6 +32,7 @@ class OrderController {
         $this->productItemModel = new ProductItemModel();
         $this->cartModel = new CartModel();
         $this->cartItemModel = new CartItemModel();
+        $this->discountModel = new DiscountModel();
     }
 
     public function index() {
@@ -37,7 +40,7 @@ class OrderController {
         
         $orderItems = $this->orderItemModel->getAllOrderItems();
     
-        renderView("view/orders/order_list.php", compact('orders', 'orderItems'), "Order List");
+        renderViewAdmin("view/admin/orders/order_list.php", compact('orders', 'orderItems'), "Order List");
     }
 
     public function showCheckout(){
@@ -61,8 +64,99 @@ class OrderController {
             $totalPrice += $cartItem['price'] * $cartItem['quantity'];
         }
     
-        renderView("view/checkout.php", compact('carts', 'cartItems', 'totalQuantity', 'totalPrice', 'productPrices'), "Cart List");
+        renderViewUser("view/user/checkout.php", compact('carts', 'cartItems', 'totalQuantity', 'totalPrice', 'productPrices'), "Cart List");
     }
+
+
+    public function checkDiscount() {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            echo json_encode(["status" => "error", "message" => "Phương thức không hợp lệ"]);
+            exit;
+        }
+    
+        header("Content-Type: application/json");
+        $code = trim($_POST['code'] ?? '');
+    
+        if (empty($code)) {
+            echo json_encode(["status" => "error", "message" => "Vui lòng nhập mã giảm giá!"]);
+            exit;
+        }
+    
+        $discount = $this->discountModel->getDiscountByCode($code);
+    
+        if (!$discount) {
+            echo json_encode(["status" => "error", "message" => "Mã giảm giá không tìm thấy"]);
+            exit;
+        }
+    
+        if ($discount['status'] != 1 || strtotime($discount['end_date']) < time()) {
+            echo json_encode(["status" => "error", "message" => "Mã giảm giá không hợp lệ hoặc đã hết hạn"]);
+            exit;
+        }
+    
+        if (!is_null($discount['usage_limit']) && $discount['used_count'] >= $discount['usage_limit']) {
+            echo json_encode(["status" => "error", "message" => "Mã giảm giá đã hết lượt sử dụng"]);
+            exit;
+        }
+    
+        if (!isset($_SESSION['user']['id'])) {
+            echo json_encode(["status" => "error", "message" => "Bạn cần đăng nhập để sử dụng mã giảm giá"]);
+            exit;
+        }
+    
+        $idUser = $_SESSION['user']['id'];
+        $idCart = $this->cartModel->getIdCartByIdUser($idUser);
+        $cartItems = !empty($idCart) ? $this->cartItemModel->getCartItemByIdCart($idCart['id']) : [];
+        $totalPrice = array_reduce($cartItems, function ($sum, $item) {
+            return $sum + ($item['price'] * $item['quantity']);
+        }, 0);
+    
+        if (!is_null($discount['min_order_value']) && $totalPrice < $discount['min_order_value']) {
+            echo json_encode(["status" => "error", "message" => "Đơn hàng chưa đủ giá trị để sử dụng mã giảm giá này"]);
+            exit;
+        }
+        if($discount['discount_type'] === 'percent') {
+        $discountAmount = $totalPrice * $discount['discount_value'] / 100;
+        } elseif($discount['discount_type'] === 'fixed') {
+            $discountAmount = $discount['discount_value'];
+        } elseif($discount['discount_type'] === 'free_shipping') {
+            $discountAmount = 0;
+        }
+        $finalAmount = max($totalPrice - $discountAmount, 0);
+
+        $appliedDiscount = [
+            'discount_id'=> $discount['id'],
+            'discount_amount'=> $finalAmount,
+            'discount_value'=> $discountAmount,
+            'discount_type'=> $discount['discount_type'],
+            'code'=> $code,
+        ];
+        $_SESSION['discount'] = $appliedDiscount;
+    
+        echo json_encode([
+            "status" => "success", 
+            "message" => "Mã giảm giá đã được áp dụng!", 
+            'discount_amount'=> $finalAmount,
+            'discount_value'=> $discountAmount,
+            'code'=> $code,
+        ]);
+        
+        exit;
+    }
+    
+    public function cancelDiscount() {
+        unset($_SESSION['discount']);
+        $idUser = $_SESSION['user']['id'];
+        $idCart = $this->cartModel->getIdCartByIdUser($idUser);
+        $cartItems = !empty($idCart) ? $this->cartItemModel->getCartItemByIdCart($idCart['id']) : [];
+        $totalPrice = array_reduce($cartItems, function ($sum, $item) {
+            return $sum + ($item['price'] * $item['quantity']);
+        }, 0);
+        echo json_encode(["status" => "success", "message" => "Mã giảm giá đã được hủy!", "originalTotal" => $totalPrice]);
+        header("Location: /checkout");
+        exit;
+    }
+
 
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -75,6 +169,7 @@ class OrderController {
             $status = "pending";
             $idUser = $_SESSION['user']['id'];
             $email = $_SESSION['user']['email'];
+
             $idCart = $this->cartModel->getIdCartByIdUser($idUser);
     
             $cartItems = !empty($idCart) ? $this->cartItemModel->getCartItemByIdCart($idCart['id']) : [];
@@ -85,9 +180,17 @@ class OrderController {
                 $totalQuantity += $cartItem['quantity'];
                 $totalPrice += $cartItem['price'] * $cartItem['quantity'];
             }
-    
+            if(!empty($_SESSION['discount'])) {
+                $discount_id = $_SESSION['discount']['discount_id'];
+                $discount_value = $_SESSION['discount']['discount_value'];
+                $final_amount = $_SESSION['discount']['discount_amount'] ;
+            } else {
+                $discount_id = null;
+                $discount_value = null;
+                $final_amount = $totalPrice;
+            }
             if ($payment == 'cod') {
-                $idOrder = $this->orderModel->createOrder($idUser, $status, $noteOrder, $payment, $totalPrice, $name, $phone, $address, $code);
+                $idOrder = $this->orderModel->createOrder($idUser, $status, $noteOrder, $payment, $totalPrice, $name, $phone, $address, $code, $discount_id, $discount_value, $final_amount);
                 
                 if (!empty($cartItems)) {
                     foreach ($cartItems as $cartItem) {
@@ -108,9 +211,12 @@ class OrderController {
                 } else {
                     $_SESSION['error'] = "Đơn hàng đã tạo nhưng không thể gửi email.";
                 }
+                $this->discountModel->updateDiscountUsage($discount_id);
+                unset($_SESSION['discount']);
                 header('Location: /cart');
                 exit;
             } elseif ($payment == 'vnpay') {
+
                 $_SESSION['order_data'] = [
                     'idUser' => $idUser,
                     'name' => $name,
@@ -119,7 +225,10 @@ class OrderController {
                     'noteOrder' => $noteOrder,
                     'payment' => $payment,
                     'total_price' => $totalPrice,
-                    'code' => $code
+                    'code' => $code,
+                    'discount_id' => $discount_id,
+                    'discount_value' => $discount_value,
+                    'final_amount'=> $final_amount
                 ];
                 header("Location: /payment/vnpay_payment");
                 exit;
@@ -176,7 +285,7 @@ class OrderController {
         $order = $this->orderModel->getOrderById($id);
         $orderItems = $this->orderItemModel->getOrderItemByIdOrder($id);
         
-        renderView("view/orders/order_detail.php", compact('order', 'orderItems'), "Order Item List");
+        renderViewAdmin("view/admin/orders/order_detail.php", compact('order', 'orderItems'), "Order Item List");
     }
 
     public function statusUpdate($id) {
@@ -197,7 +306,7 @@ class OrderController {
 
         } else {    
             $order = $this->orderModel->getOrderById($id);
-            renderView("view/orders/order_edit.php", compact('order'), "Edit Order");
+            renderViewAdmin("view/admin/orders/order_edit.php", compact('order'), "Edit Order");
         }
     }
 
@@ -216,7 +325,7 @@ class OrderController {
         $vnp_TxnRef = $order['code']; // Mã đơn hàng
         $vnp_OrderInfo = "Thanh toán đơn hàng " . $order['code'];
         $vnp_OrderType = "billpayment";
-        $vnp_Amount = $order['total_price'] * 100; // VNPay nhận đơn vị VNĐ x 100
+        $vnp_Amount = $order['final_amount'] * 100; // VNPay nhận đơn vị VNĐ x 100
         $vnp_Locale = "vn";
         $vnp_BankCode = "";
         $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
@@ -295,9 +404,17 @@ class OrderController {
                 $noteOrder = $order['noteOrder'];
                 $payment = $order['payment'];
                 $email = $_SESSION['user']['email'];
-    
+                if(!empty($_SESSION['discount'])) {
+                    $discount_id = $_SESSION['discount']['id'];
+                    $discount_value = $_SESSION['discount']['discount_value'];
+                    $final_amount = $_SESSION['discount']['discount_amount'];
+                } else {
+                    $discount_id = null;
+                    $discount_value = null;
+                    $final_amount = $total_price;
+                }
                 // Create order in the database
-                $idOrder = $this->orderModel->createOrder($idUser, $status, $noteOrder, $payment, $total_price, $name, $phone, $address, $code);
+                $idOrder = $this->orderModel->createOrder($idUser, $status, $noteOrder, $payment, $total_price, $name, $phone, $address, $code, $discount_id, $discount_value, $final_amount);
     
                 // Retrieve cart items
                 $idCart = $this->cartModel->getIdCartByIdUser($idUser);
@@ -321,7 +438,8 @@ class OrderController {
     
                 // Send order confirmation email
                 $this->sendOrderEmail($email, $name, $phone, $address, $code, $total_price);
-                
+                $this->discountModel->updateDiscountUsage($discount_id);
+                unset($_SESSION['discount']);
                 // Redirect to order success page
                 $_SESSION['success'] = "Thanh toán thành công. Đơn hàng đã được tạo.";
                 header('Location: /cart');
@@ -337,13 +455,13 @@ class OrderController {
     public function getOrdersBuyed() {
         $idUser = $_SESSION['user']['id'];
         $orders = $this->orderModel->getAllOrderByIdUser($idUser);
-        renderView("view/order_buyed.php", compact('orders' ), "Orders Buyed");
+        renderViewUser("view/user/order_buyed.php", compact('orders' ), "Orders Buyed");
     }
     
     public function getOrderItemsBuyed($idOrder) {
         $orders = $this->orderModel->getOrderById($idOrder);
         $orderItems = $this->orderItemModel->getOrderItemByIdOrder($idOrder);
-        renderView("view/order_detail_buyed.php", compact('orders' , 'orderItems' ), "Orders Buyed");
+        renderViewUser("view/user/order_detail_buyed.php", compact('orders' , 'orderItems' ), "Orders Buyed");
     }
 
     public function trackOrder(){
@@ -492,6 +610,42 @@ class OrderController {
         header("Location: /checkout");
         exit;
     }
+
+        public function revenue() {
+            $stockData = $this->productItemModel->getStockCounts();
+
+            $productNames = array_column($stockData, 'product_name');
+            $stockCounts = array_column($stockData, 'stock_count');
+
+            $statusData = $this->orderModel->getOrderStatusCount();
+
+            $statusLabels = array_column($statusData, 'status');
+            $statusCounts = array_column($statusData, 'count');
+
+            $bestSellingData = $this->orderItemModel->getBestSellingProducts();
+
+            $bestSellingNames = array_column($bestSellingData, 'name');
+            $bestSellingCounts = array_column($bestSellingData, 'sold_count');
+            $data = [
+                'totalRevenue' => $this->orderModel->getTotalRevenue(),
+                'totalRevenueSuccess' => $this->orderModel->getTotalRevenueSuccess(),
+                'totalOrders' => $this->orderModel->getTotalOrder(),
+                'totalSoldProducts' => $this->orderItemModel->getTotalSoldProducts(),
+                'totalStock' => $this->productItemModel->getTotalStock(),
+                'productNames' => $productNames,
+                'stockCounts' => $stockCounts,
+                'orderDates' => $this->orderModel->getOrderDates(),
+                'dailyRevenues' => $this->orderModel->getDailyRevenues(),
+                'monthlyRevenues' => $this->orderModel->getMonthlyRevenues(),
+                'months' => $this->orderModel->getMonths(),
+                'orderStatusCount' => $this->orderModel->getOrderStatusCount(),
+                'bestSellingProducts' => $this->orderItemModel->getBestSellingProducts(),
+                'statusLabels' => $statusLabels,
+                'statusCounts' => $statusCounts,
+                'bestSellingNames' => $bestSellingNames,
+                'bestSellingCounts' => $bestSellingCounts,
+            ];
     
-    
+            renderViewAdmin("view/admin/dashboard.php", $data);
+    }
 }

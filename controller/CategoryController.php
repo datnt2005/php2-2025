@@ -9,23 +9,20 @@ class CategoryController {
         $this->categoryModel = new CategoryModel();
     }
 
+
     public function index() {
         $categories = $this->categoryModel->getAllCategories();
         //compact: gom bien dien thanh array
-        renderView("view/categories/category_list.php", compact('categories'), "Category List");
+        renderViewAdmin("view/admin/categories/category_list.php", compact('categories'), "Category List");
     }
 
-    public function show($id) {
-        $category = $this->categoryModel->getCategoryById($id);
-        renderView("view/categories/category_detail.php", compact('category'), "Category Detail");
-    }
 
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = trim($_POST['name']);
     
             if (empty($name)) {
-                renderView("view/categories/category_create.php", [
+                renderViewAdmin("view/admin/categories/category_create.php", [
                     'error' => 'Category name is required!'
                 ], "Create Category");
             } else {
@@ -35,7 +32,7 @@ class CategoryController {
                 </script>";
             }
         } else {
-            renderView("view/categories/category_create.php", [], "Create Category");
+            renderViewAdmin("view/admin/categories/category_create.php", [], "Create Category");
         }
     }
     
@@ -48,7 +45,7 @@ class CategoryController {
             header("Location: /categories");
         } else {
             $category = $this->categoryModel->getCategoryById($id);
-            renderView("view/categories/category_edit.php", compact('category'), "Edit Category");
+            renderViewAdmin("view/admin/categories/category_edit.php", compact('category'), "Edit Category");
         }
     }
 

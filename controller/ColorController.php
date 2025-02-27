@@ -12,13 +12,9 @@ class ColorController {
     public function index() {
         $colors = $this->colorModel->getAllColors();
         //compact: gom bien dien thanh array
-        renderView("view/colors/color_list.php", compact('colors'), "colors List");
+        renderViewAdmin("view/admin/colors/color_list.php", compact('colors'), "colors List");
     }
 
-    public function show($id) {
-        $color = $this->colorModel->getColorById($id);
-        renderView("view/colors/color_detail.php", compact('color'), "color Detail");
-    }
 
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -30,7 +26,7 @@ class ColorController {
             </script>";
             // header("Location: /categories");
         } else {
-            renderView("view/colors/color_create.php", [], "Create color");
+            renderViewAdmin("view/admin/colors/color_create.php", [], "Create color");
         }
     }
 
@@ -42,7 +38,7 @@ class ColorController {
             header("Location: /colors");
         } else {
             $color = $this->colorModel->getColorById($id);
-            renderView("view/colors/color_edit.php", compact('color'), "Edit color");
+            renderViewAdmin("view/admin/colors/color_edit.php", compact('color'), "Edit color");
         }
     }
 

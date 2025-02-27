@@ -1,20 +1,21 @@
 <?php
-// function isAdmin() {
-//     // Check if the user role is 'admin'
-//     if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin') {
-//         return true;
-//     }
-//     echo "Access denied: Admin privileges required.";
-//     header("Location: /login");
-//     exit;
-// }
+
+function isAdmin() {
+    // Check if the user role is 'admin'
+    if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin') {
+        return true;
+    }
+    echo "Access denied: Admin privileges required.";
+    header("Location: /login");
+    exit;
+}
 
 function isUser() {
-    if (!isset($_SESSION['user'])) {
-        header("Location: /login");
-        exit;
+    if (isset($_SESSION['user'])) {
+        return true;
     }
-    return true;
+    header("Location: /login");
+    exit;
 }
 
 function logRequest() {
@@ -22,5 +23,4 @@ function logRequest() {
     error_log("Request received at " . date('Y-m-d H:i:s'));
     return true;
 }
-
 ?>

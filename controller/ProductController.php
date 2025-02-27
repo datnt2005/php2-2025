@@ -5,6 +5,8 @@ require_once "model/PicProductModel.php";
 require_once "model/CategoryModel.php";
 require_once "model/SizeModel.php";
 require_once "model/ColorModel.php";
+require_once "model/BannerModel.php";
+
 // require_once ;
 require_once "view/helpers.php";
 
@@ -15,6 +17,7 @@ class ProductController {
     private $picProductModel;
     private $sizeModel;
     private $colorModel;
+    private $bannerModel;
     public function __construct() {
         $this->productModel = new ProductModel();
         $this->categoryModel = new CategoryModel();
@@ -22,15 +25,16 @@ class ProductController {
         $this->picProductModel = new PicProductModel();
         $this->sizeModel = new SizeModel();
         $this->colorModel = new ColorModel();
+        $this->bannerModel = new BannerModel();
     }
 
     public function home() {    
         $products = $this->productModel->getAllProducts();
-        renderView("view/home.php",  compact('products'), "Product List");
+        renderViewUser("view/user/home.php",  compact('products'), "Product List");
     }
     public function index() {
         $products = $this->productModel->getAllProducts();
-        renderView("view/products/product_list.php",  compact('products'), "Product List");
+        renderViewAdmin("view/admin/products/product_list.php",  compact('products'), "Product List");
     }
 
     public function shop() {
@@ -39,8 +43,9 @@ class ProductController {
         $productItems = $this->productItemModel->getAllProductItems();
         $sizes = $this->sizeModel->getAllSizes();
         $colors = $this->colorModel->getAllColors();
-        $relatedProducts = $this->productModel->relateProduct($categories[0]['id']);
-        renderView("view/shop.php",  compact('products', 'categories', 'productItems', 'sizes', 'colors', 'relatedProducts'), "Product List");
+        $relatedProducts = $this->productModel->relativeProduct($categories[0]['id']);
+        $banners = $this->bannerModel->getAllBanners();
+        renderViewUser("view/user/shop.php",  compact('products', 'categories', 'productItems', 'sizes', 'colors', 'relatedProducts', 'banners'), "Product List");
     }
     public function show($id) {
         $product = $this->productModel->getProductById($id);
@@ -48,7 +53,8 @@ class ProductController {
         $sizes = $this->sizeModel->getAllSizes();
         $colors = $this->colorModel->getAllColors();
         $picProducts = $this->picProductModel->getPicProductByIdProduct($id);
-        renderView("view/products/product_detail.php", compact('product', 'productItems', 'sizes', 'colors', 'picProducts'), "Product Detail");
+        $relatedProducts = $this->productModel->relativeProduct($id);
+        renderViewUser("view/user/product_detail.php", compact('product', 'productItems', 'sizes', 'colors', 'picProducts', 'relatedProducts'), "Product Detail");
     }
 
     public function create() {
@@ -94,7 +100,7 @@ class ProductController {
             $sizes = $this->sizeModel->getAllSizes();
             $colors = $this->colorModel->getAllColors();
     
-            renderView("view/products/product_create.php", compact('categories', 'sizes', 'colors'), "Create Product");
+            renderViewAdmin("view/admin/products/product_create.php", compact('categories', 'sizes', 'colors'), "Create Product");
         }
     }
 
@@ -150,7 +156,7 @@ class ProductController {
             $images = $this->picProductModel->getPicProductByIdProduct($id);
     
             // Render form chỉnh sửa
-            renderView("view/products/product_edit.php", compact('product', 'categories', 'sizes', 'colors', 'variants' , 'images'), "Edit Product");
+            renderViewAdmin("view/admin/products/product_edit.php", compact('product', 'categories', 'sizes', 'colors', 'variants' , 'images'), "Edit Product");
         }
     }
     
@@ -164,12 +170,40 @@ class ProductController {
 
     public function addVariant($id) {
         $product = $this->productModel->getProductById($id);
-        renderView("view/products/variants/productVariant_create.php", compact('product'), "Product Detail");
+        renderViewAdmin("view/admin/products/variants/productVariant_create.php", compact('product'), "Product Detail");
     }
 
     public function listVariant($id) {
         $productItems = $this->productItemModel->getProductItemByIdProduct($id);
-        renderView("view/products/variants/productVariant_list.php", compact('productItems'), "Product Detail");
+        renderViewAdmin("view/admin/products/variants/productVariant_list.php", compact('productItems'), "Product Detail");
     }
 
+    public function filterProduct() {
+        $categoryIds = $_GET['category'] ?? [];
+        $sortBy = $_GET['sort'] ?? 'newest'; 
+        $name = $_GET['search'] ?? null;
+        $selectedColors = $_GET['color'] ?? []; 
+        $selectedSizes = $_GET['size'] ?? []; 
+    
+        // Xử lý khoảng giá
+        $priceRange = $_GET['price_range'] ?? null;
+        $minPrice = null;
+        $maxPrice = null;
+        if ($priceRange) {
+            $priceParts = explode('-', $priceRange);
+            $minPrice = isset($priceParts[0]) ? (int) $priceParts[0] : null;
+            $maxPrice = isset($priceParts[1]) ? (int) $priceParts[1] : null;
+        }
+
+        // Gọi Model để lấy sản phẩm theo bộ lọc
+        $products = $this->productModel->getProductByFilters($categoryIds, $minPrice, $maxPrice, $name, $sortBy, $selectedColors, $selectedSizes);
+    
+        // Lấy danh sách danh mục, kích thước, màu sắc
+        $categories = $this->categoryModel->getAllCategories();
+        $sizes = $this->sizeModel->getAllSizes();
+        $colors = $this->colorModel->getAllColors();
+        $banners = $this->bannerModel->getAllBanners();
+        renderViewUser("view/user/shop.php", compact('products', 'categories', 'sizes', 'colors', 'sortBy', 'selectedColors', 'selectedSizes', 'categoryIds', 'minPrice', 'maxPrice', 'banners'), "Filtered Product List");
+    }
+    
 }
