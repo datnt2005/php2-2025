@@ -432,3 +432,19 @@ aside .filter .list-evaluate ul li a{
     background-color: #5c5c5c !important;
     color: white !important;
 }
+.favorite-icon {
+    cursor: pointer;
+    z-index: 10;
+    /* background: rgba(0, 0, 0, 0.5); Làm nền tối nhẹ để dễ nhìn */
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 10px;
+    left: 270px;   
+    color: #c5c5c5; 
+}
+/* 
+.favorite-icon:hover  {
+    stroke: red;
+    color: red;
+} */

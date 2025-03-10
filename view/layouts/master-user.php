@@ -27,39 +27,38 @@
                     <nav>
                         <ul class="navbar-nav">
                             <li class="nav-item">
-                                <a class="nav-link text-white" aria-current="page"
-                                    href="/shop">
+                                <a class="nav-link text-white" aria-current="page" href="/shop">
                                     iPhone
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" aria-current="page"
-                                    href="/shop">
+                                <a class="nav-link text-white" aria-current="page" href="/shop">
                                     iPad
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" aria-current="page"
-                                    href="/shop">
+                                <a class="nav-link text-white" aria-current="page" href="/shop">
                                     Macbook
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" aria-current="page"
-                                    href="/shop">
+                                <a class="nav-link text-white" aria-current="page" href="/shop">
                                     Watch
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" aria-current="page"
-                                    href="/shop">
+                                <a class="nav-link text-white" aria-current="page" href="/shop">
                                     Âm thanh
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-white" aria-current="page"
-                                    href="/shop">
+                                <a class="nav-link text-white" aria-current="page" href="/shop">
                                     Phụ kiện
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" aria-current="page" href="/stores/showStore">
+                                    Stores
                                 </a>
                             </li>
                         </ul>
@@ -77,6 +76,17 @@
                 </div>
                 <div class="header-cart mt-3">
                     <ul class="d-flex ">
+                        <li class="nav-link mx-2">
+                            <a class="text-white " href="/favorites">
+                                <svg class="lucide lucide-heart" stroke-linejoin="round" stroke-linecap="round"
+                                    stroke-width="1" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="30"
+                                    width="30" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.35l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z">
+                                    </path>
+                                </svg>
+                            </a>
+                        </li>
                         <li class="nav-link mx-2">
                             <a class="text-white" href="/cart">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"
@@ -167,7 +177,7 @@
 
         <?php
         if (!empty($_SESSION['error'])) : ?>
-        <div class="alert alert-danger text-center" role="alert">
+        <div class="alert alert-danger text-center m-0" role="alert">
             <?= $_SESSION['error'] ?>
         </div>
         <?php unset($_SESSION['error']); ?>
@@ -184,7 +194,7 @@
             <div class="row">
                 <div class="col-md-3">
                     <a href="#">
-                        <img src="./public/images/logo.webp" width="100px" alt>
+                        <img src="/public/images/logo.webp" width="100px" alt>
                     </a>
                 </div>
                 <div class="col-md-3">

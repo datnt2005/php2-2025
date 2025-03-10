@@ -106,11 +106,16 @@ class DiscountController {
     public function checkDiscount() {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $code = $_POST['code'] ?? '';
-            
+
             if (empty($code)) {
-                $_SESSION['message_discount'] = 'Vui lòng nhập mã giảm giá!';
+                $response = [
+                    'success' => false,
+                    'message' => 'Vui lòng nhập mã giảm giá!'
+                ];
+                echo json_encode($response);
+                return;
             }
-    
+
             $discount = $this->discountModel->getDiscountByCode($code);
             
             if ($discount) {
@@ -161,38 +166,69 @@ class DiscountController {
     
                 $finalAmount = $totalPrice - $discountAmount;
     
-                return [
+                $response = [
                     'success' => true,
                     'message' => 'Áp dụng mã giảm giá thành công',
+                    'code' => $code,
                     'discount_id' => $discountId,
                     'discount_type' => $discountType,
                     'discount_value' => $discountValue,
                     'discount_amount' => $discountAmount,
                     'final_amount' => $finalAmount
                 ];
+                echo json_encode($response);
+                return;
             } else {
-                return [
+                $response = [
                     'success' => false,
                     'message' => 'Mã giảm giá không tồn tại'
                 ];
+                echo json_encode($response);
+                return;
             }
         }
-        
-        return [
+
+        $response = [
             'success' => false,
             'message' => 'Phương thức không hợp lệ'
         ];
+        echo json_encode($response);
     }
     
-    private function getTotalPrice() {
-        // Logic để lấy tổng giá đơn hàng
-        // Ví dụ: return $this->cart->getTotal();
-        return 0; // Thay bằng logic thực tế
-    }
-    
-    private function getShippingCost() {
-        // Logic để lấy phí vận chuyển
-        // Ví dụ: return $this->shipping->getCost();
-        return 0; // Thay bằng logic thực tế
-    }
+    public function applyDiscount() {
+        $result = $this->checkDiscount();
+        if ($result) {
+          if ($result['success']){
+              $_SESSION['discount'] = [
+                  'discount_id' => $result['discount_id'],
+                  'discount_type' => $result['discount_type'],
+                  'discount_value' => $result['discount_value'],
+                  'discount_amount' => $result['discount_amount'],
+                  'discount_amount' => $result['final_amount'],
+                  'code' => $_POST['code'] ?? "",
+              ];
+          }
+          echo json_encode($result);
+        }
+      }
+      
+      public function cancelDiscount(){
+          if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_discount']) && $_POST['cancel_discount'] == 1) {
+              unset($_SESSION['discount']);
+              $totalPrice = $this->getTotalPrice();
+              $response = [
+                      'success' => true,
+                      'message' => 'Hủy mã giảm giá thành công',
+                      'originalTotal' => $totalPrice
+                  ];
+              echo json_encode($response);
+              return;
+          }
+          $response = [
+              'success' => false,
+              'message' => 'Hủy mã giảm giá thất bại',
+          ];
+          echo json_encode($response);
+      }
+  
 }

@@ -6,7 +6,8 @@
                 <div class="card-header">
                     <h3 class="card-title">Create Product</h3>
                 </div>
-                <form method="POST" action="/products/create" id="createProductForm" enctype="multipart/form-data" class="m-5">
+                <form method="POST" action="/products/create" id="createProductForm" enctype="multipart/form-data"
+                    class="m-5">
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="name" name="name" required>
@@ -36,20 +37,20 @@
                     <button type="button" class="btn btn-info" id="addVariantButton">Thêm biến thể</button>
                     <button type="submit" class="btn btn-success">Create</button>
                 </form>
-                </div>
+            </div>
         </div>
     </div>
 </div>
-                <script>
-                const sizes = <?= json_encode($sizes) ?>; // Kích thước từ PHP
-                const colors = <?= json_encode($colors) ?>; // Màu sắc từ PHP
-                const variantContainer = document.getElementById('variant-container');
-                const addVariantButton = document.getElementById('addVariantButton');
-                let variantCount = 0;
+<script>
+const sizes = <?= json_encode($sizes) ?>; // Kích thước từ PHP
+const colors = <?= json_encode($colors) ?>; // Màu sắc từ PHP
+const variantContainer = document.getElementById('variant-container');
+const addVariantButton = document.getElementById('addVariantButton');
+let variantCount = 0;
 
-                // Thêm một biến thể mới
-                function addVariant() {
-                    const variantHTML = `
+// Thêm một biến thể mới
+function addVariant() {
+    const variantHTML = `
             <div class="variant-group border p-3 mb-3" id="variant-${variantCount}">
                 <div class="row">
                     <div class="col-md-2">
@@ -84,52 +85,52 @@
                 </div>
             </div>
         `;
-                    variantContainer.insertAdjacentHTML('beforeend', variantHTML);
-                    variantCount++;
-                }
+    variantContainer.insertAdjacentHTML('beforeend', variantHTML);
+    variantCount++;
+}
 
-                // Xóa một biến thể
-                function removeVariant(index) {
-                    const variant = document.getElementById(`variant-${index}`);
-                    if (variant) variant.remove();
-                }
+// Xóa một biến thể
+function removeVariant(index) {
+    const variant = document.getElementById(`variant-${index}`);
+    if (variant) variant.remove();
+}
 
-                addVariantButton.addEventListener('click', addVariant);
+addVariantButton.addEventListener('click', addVariant);
 
 
-                //hinh anh
-                const imageInput = document.getElementById('image');
-                const listImages = document.getElementById('listImages');
+//hinh anh
+const imageInput = document.getElementById('image');
+const listImages = document.getElementById('listImages');
 
-                imageInput.addEventListener('change', function() {
-                    // Xóa các ảnh cũ đã hiển thị
-                    listImages.innerHTML = "";
+imageInput.addEventListener('change', function() {
+    // Xóa các ảnh cũ đã hiển thị
+    listImages.innerHTML = "";
 
-                    Array.from(imageInput.files).forEach((file, index) => {
-                        const imageUrl = URL.createObjectURL(file);
-                        const imageWrapper = document.createElement('div');
-                        imageWrapper.classList.add('image-wrapper', 'd-inline-block',
-                            'position-relative', 'me-2', 'mb-2');
+    Array.from(imageInput.files).forEach((file, index) => {
+        const imageUrl = URL.createObjectURL(file);
+        const imageWrapper = document.createElement('div');
+        imageWrapper.classList.add('image-wrapper', 'd-inline-block',
+            'position-relative', 'me-2', 'mb-2');
 
-                        imageWrapper.innerHTML = `
+        imageWrapper.innerHTML = `
                 <img src="${imageUrl}" alt="Image Preview" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="removeSelectedImage(${index})">&times;</button>
             `;
-                        listImages.appendChild(imageWrapper);
-                    });
-                });
+        listImages.appendChild(imageWrapper);
+    });
+});
 
-                function removeSelectedImage(index) {
-                    const files = Array.from(imageInput.files);
-                    files.splice(index, 1);
+function removeSelectedImage(index) {
+    const files = Array.from(imageInput.files);
+    files.splice(index, 1);
 
-                    // Tạo lại FileList từ danh sách mới
-                    const dataTransfer = new DataTransfer();
-                    files.forEach(file => dataTransfer.items.add(file));
-                    imageInput.files = dataTransfer.files;
+    // Tạo lại FileList từ danh sách mới
+    const dataTransfer = new DataTransfer();
+    files.forEach(file => dataTransfer.items.add(file));
+    imageInput.files = dataTransfer.files;
 
-                    // Cập nhật hiển thị
-                    const changeEvent = new Event("change");
-                    imageInput.dispatchEvent(changeEvent);
-                }
-                </script>
+    // Cập nhật hiển thị
+    const changeEvent = new Event("change");
+    imageInput.dispatchEvent(changeEvent);
+}
+</script>

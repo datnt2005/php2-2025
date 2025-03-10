@@ -1,17 +1,30 @@
-<section id="myOrder" class="py-3">
-<h1 class="text-center my-4 text-white">Forgot Password</h1>
-<?php if (isset($error)): ?>
-    <div class="alert alert-danger text-center" role="alert">
-        <?= $error ?>
-    </div>
-<?php endif; ?>
-<div class="container">
-    <form method="POST" class="w-50 bg-white mx-auto border p-4 mb-3 rounded shadow">
-        <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" name="email" id="email" class="form-control" placeholder="Enter your email" required>
+
+<section id="forgotPassword">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="text-center text-white mt-5">QUÊN MẬT KHẨU
+                        ?</h2>
+                        <?php if (isset($error)): ?>
+                            <div class="alert alert-danger text-center" role="alert">
+                                <?= $error ?>
+                            </div>
+                        <?php endif; ?>
+                    <div class="form-login">
+                        <form action class="mt-4 w-50 mx-auto" method="POST">
+                            <div class="email-value">
+                                <p class="text-white text-center mb-3 fs-5">Vui lòng nhập địa chỉ email của bạn
+                                    dưới đây để đặt lại mật khẩu.</p>
+                                <label for="email" class="form-label m-0">Email <span
+                                        class="text-danger">*</span></label>
+                                <input type="email" name="email" id="email-forgot" class="value-forgot d-block w-100" value required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-info w-50 d-block m-auto text-dark fw-bold btn-submit mt-4" name="action" value ="forgot">Đặt lại
+                                mật khẩu</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Submit</button>
-    </form>
-</div>
-</section>
+    </section>

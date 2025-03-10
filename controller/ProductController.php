@@ -6,6 +6,12 @@ require_once "model/CategoryModel.php";
 require_once "model/SizeModel.php";
 require_once "model/ColorModel.php";
 require_once "model/BannerModel.php";
+require_once "model/favoriteModel.php";
+require_once "model/favoriteModel.php";
+require_once "model/favoriteItemModel.php";
+require_once "model/CommentModel.php";
+require_once "model/OrderModel.php";
+
 
 // require_once ;
 require_once "view/helpers.php";
@@ -18,6 +24,11 @@ class ProductController {
     private $sizeModel;
     private $colorModel;
     private $bannerModel;
+    private $favoriteModel;
+    private $favoriteItemModel;
+    private $commentModel;
+    private $commentLikeModel;
+    private $orderModel;
     public function __construct() {
         $this->productModel = new ProductModel();
         $this->categoryModel = new CategoryModel();
@@ -26,11 +37,36 @@ class ProductController {
         $this->sizeModel = new SizeModel();
         $this->colorModel = new ColorModel();
         $this->bannerModel = new BannerModel();
+        $this->favoriteModel = new FavoriteModel();
+        $this->favoriteItemModel = new FavoriteItemModel();
+        $this->commentModel = new CommentModel();
+        $this->orderModel = new OrderModel();
+        $this->commentLikeModel = new CommentLikeModel();
     }
 
     public function home() {    
         $products = $this->productModel->getAllProducts();
-        renderViewUser("view/user/home.php",  compact('products'), "Product List");
+        $categories = $this->categoryModel->getAllCategories();
+        $productItems = $this->productItemModel->getAllProductItems();
+        $sizes = $this->sizeModel->getAllSizes();
+        $colors = $this->colorModel->getAllColors();
+        $relatedProducts = $this->productModel->relativeProduct($categories[0]['id']);
+        $banners = $this->bannerModel->getAllBanners();
+        
+        $idUser = $_SESSION['user']['id'] ?? null;
+        $favorites = $this->favoriteModel->getFavoriteByUserId($idUser);
+        $favoriteProductIds = [];
+        if (!empty($favorites)) {
+            foreach ($favorites as $favorite) {
+                $favoriteItems = $this->favoriteItemModel->getFavoriteItemByIdFavorite($favorite['id']);
+                foreach ($favoriteItems as $item) {
+                    $favoriteProductIds[] = $item['idProduct'];
+                }
+            }
+        }
+        
+        renderViewUser("view/user/home.php", compact('products', 'categories', 'productItems', 'sizes', 'colors', 'relatedProducts', 'banners', 'favoriteProductIds'), "Product List");
+
     }
     public function index() {
         $products = $this->productModel->getAllProducts();
@@ -45,7 +81,20 @@ class ProductController {
         $colors = $this->colorModel->getAllColors();
         $relatedProducts = $this->productModel->relativeProduct($categories[0]['id']);
         $banners = $this->bannerModel->getAllBanners();
-        renderViewUser("view/user/shop.php",  compact('products', 'categories', 'productItems', 'sizes', 'colors', 'relatedProducts', 'banners'), "Product List");
+        
+        $idUser = $_SESSION['user']['id'] ?? null;
+        $favorites = $this->favoriteModel->getFavoriteByUserId($idUser);
+        $favoriteProductIds = [];
+        if (!empty($favorites)) {
+            foreach ($favorites as $favorite) {
+                $favoriteItems = $this->favoriteItemModel->getFavoriteItemByIdFavorite($favorite['id']);
+                foreach ($favoriteItems as $item) {
+                    $favoriteProductIds[] = $item['idProduct'];
+                }
+            }
+        }
+        renderViewUser("view/user/shop.php", compact('products', 'categories', 'productItems', 'sizes', 'colors', 'relatedProducts', 'banners', 'favoriteProductIds'), "Product List");
+
     }
     public function show($id) {
         $product = $this->productModel->getProductById($id);
@@ -54,7 +103,20 @@ class ProductController {
         $colors = $this->colorModel->getAllColors();
         $picProducts = $this->picProductModel->getPicProductByIdProduct($id);
         $relatedProducts = $this->productModel->relativeProduct($id);
-        renderViewUser("view/user/product_detail.php", compact('product', 'productItems', 'sizes', 'colors', 'picProducts', 'relatedProducts'), "Product Detail");
+        $comments = $this->commentModel->getCommentByProduct($id);
+        $idUser = $_SESSION['user']['id'] ?? null;
+
+        foreach($comments as $comment){
+            $comment['liked'] = $this->commentLikeModel->hasUserLiked($comment['id'], $idUser);
+        }
+        $averageRating = $this->commentModel->getAverageRating($id);   
+
+        if(!empty($idUser)){
+            $canComment = $this->orderModel->checkPurchased($id, $idUser);
+        }else{
+            $canComment = false;
+        }
+        renderViewUser("view/user/product_detail.php", compact('product', 'productItems', 'sizes', 'colors', 'picProducts', 'relatedProducts', 'comments', 'averageRating', 'canComment'), "Product Detail");
     }
 
     public function create() {
@@ -203,7 +265,19 @@ class ProductController {
         $sizes = $this->sizeModel->getAllSizes();
         $colors = $this->colorModel->getAllColors();
         $banners = $this->bannerModel->getAllBanners();
-        renderViewUser("view/user/shop.php", compact('products', 'categories', 'sizes', 'colors', 'sortBy', 'selectedColors', 'selectedSizes', 'categoryIds', 'minPrice', 'maxPrice', 'banners'), "Filtered Product List");
+         
+        $idUser = $_SESSION['user']['id'] ?? null;
+        $favorites = $this->favoriteModel->getFavoriteByUserId($idUser);
+        $favoriteProductIds = [];
+        if (!empty($favorites)) {
+            foreach ($favorites as $favorite) {
+                $favoriteItems = $this->favoriteItemModel->getFavoriteItemByIdFavorite($favorite['id']);
+                foreach ($favoriteItems as $item) {
+                    $favoriteProductIds[] = $item['idProduct'];
+                }
+            }
+        }
+        renderViewUser("view/user/shop.php", compact('products', 'categories', 'sizes', 'colors', 'sortBy', 'selectedColors', 'selectedSizes', 'categoryIds', 'minPrice', 'maxPrice', 'banners', 'favoriteProductIds'), "Filtered Product List");
     }
     
 }

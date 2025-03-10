@@ -204,7 +204,19 @@ public function getMonths() {
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_COLUMN);
     
-    }
+}
     
+public function checkPurchased($idProduct, $idUser) {
+    $query = "SELECT * FROM orders ord
+             JOIN order_items od ON ord.id = od.idOrder
+             WHERE od.idProduct = :idProduct AND ord.idUser = :idUser";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':idProduct', $idProduct);
+    $stmt->bindParam(':idUser', $idUser);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $result; 
+}
 }
 ?>

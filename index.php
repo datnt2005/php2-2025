@@ -10,6 +10,13 @@ require_once "controller/CartController.php";
 require_once "controller/OrderController.php";
 require_once "controller/DiscountController.php";
 require_once "controller/BannerController.php";
+require_once "controller/StoreController.php";
+require_once "controller/LocationController.php";
+require_once "controller/FavoriteController.php";
+require_once "controller/CommentController.php";
+
+
+
 require_once "router/Router.php";
 require_once "middleware.php";
 
@@ -24,6 +31,10 @@ $cartController = new CartController();
 $orderController = new OrderController();
 $discountController = new DiscountController();
 $bannerController = new BannerController();
+$storeController = new StoreController();
+$locationController = new LocationController();
+$favoriteController = new FavoriteController();
+$commentController = new CommentController();
 
 $router->addMiddleware('logRequest');
 
@@ -80,9 +91,9 @@ $router->addRoute("/order/{id}", [$orderController,"showOrderItem"],['isAdmin'])
 $router->addRoute("/orders/create", [$orderController,"create"],['isUser']);
 $router->addRoute("/order/edit/{id}", [$orderController,"statusUpdate"],['isAdmin']);
 $router->addRoute("/order/delete/{id}", [$orderController,"delete"],['isAdmin']);
-$router->addRoute("/payment/vnpay_payment", [$orderController, "vnpay_payment"],['isAdmin']);
-$router->addRoute("/payment/vnpay/return", [$orderController, "vnpay_return"],['isAdmin']);
-$router->addRoute("/payment/vnpay/cancel", [$orderController, "vnpayCancel"],['isAdmin']);
+$router->addRoute("/payment/vnpay_payment", [$orderController, "vnpay_payment"],['isUser']);
+$router->addRoute("/payment/vnpay/return", [$orderController, "vnpay_return"],['isUser']);
+$router->addRoute("/payment/vnpay/cancel", [$orderController, "vnpayCancel"],['isUser']);
 $router->addRoute("/myOrder", [$orderController,"getOrdersBuyed"],['isUser']);
 $router->addRoute("/myOrderItem/{idOrder}", [$orderController,"getOrderItemsBuyed"],['isUser']);
 $router->addRoute("/trackOrder", [$orderController,"trackOrder"]);
@@ -101,9 +112,37 @@ $router->addRoute('/banners/create', [$bannerController,'create'],['isAdmin']);
 $router->addRoute('/banners/{id}', [$bannerController,'edit'],['isAdmin']);
 $router->addRoute('/banners/delete/{id}', [$bannerController,'delete'],['isAdmin']);
 
+$router->addRoute('/stores', [$storeController, 'index'],['isAdmin']);
+$router->addRoute('/stores/create', [$storeController, 'create'],['isAdmin']);
+// $router->addRoute('/stores/{id}', [$storeController, 'show'],['isAdmin']);
+$router->addRoute('/stores/edit/{id}', [$storeController, 'edit'],['isAdmin']);
+$router->addRoute('/stores/delete/{id}', [$storeController, 'delete'],['isAdmin']);
+$router->addRoute('/stores/showStore', [$storeController,'showStore'],['isUser']);
+
+$router->addRoute('/location/provinces', [$locationController, 'getProvinces'], ['isAdmin']);
+$router->addRoute('/location/districts/{province_id}', [$locationController, 'getDistricts'], ['isAdmin']);
+$router->addRoute('/location/wards/{district_id}', [$locationController, 'getWards'], ['isAdmin']);
+
+
+$router->addRoute('/favorites', [$favoriteController, 'index'], ['isUser']);
+$router->addRoute('/favorites/create/{idProduct}', [$favoriteController,'create'], ['isUser']);
+$router->addRoute('/favorites/delete/{idFavorite}', [$favoriteController,'deleteFavorite'], ['isUser']);
 
 
 $router->addRoute('/admin', [$orderController,'revenue'],['isAdmin']);
 
+$router->addRoute('/comments', [$commentController,'index'], ['isAdmin']);
+$router->addRoute('/comments/create', [$commentController,'create'], ['isAdmin']);
+$router->addRoute('/comments/edit/{id}', [$commentController,'edit'], ['isAdmin']);
+$router->addRoute('/comments/delete/{id}', [$commentController,'delete'], ['isAdmin']);
+$router->addRoute('/comments/deleteComment/{id}/{idProduct}', [$commentController,'removeComment'], ['isUser']);
+$router->addRoute('/comments/delete_pic_comment/{idComment}/{idCommentMedia}', [$commentController,'deletePicComment'], ['isAdmin']);
+$router->addRoute('/comments/addCommentUser/{idProduct}', [$commentController,'addCommentUser'], ['isUser']);
+$router->addRoute('/comments/editCommentUser', [$commentController,'updateCommentUser'], ['isUser']);
+$router->addRoute('/comments/toggleLikeComment', [$commentController,'toggleLikeComment'], ['isUser']);
+$router->addRoute('/comments/getLikeCount/{commentId}', [$commentController,'getLikeCount'], ['isUser']);
+$router->addRoute('/comments/checkLike/{commentId}', [$commentController,'checkLike'], ['isUser']);
+
+$router->addRoute('/products/{idProduct}', [$commentController,'getCommentByProduct'], ['isUser']);
 $router->dispatch();
 ?>

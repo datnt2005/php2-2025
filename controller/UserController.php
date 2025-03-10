@@ -23,6 +23,7 @@ class UserController {
         $this->googleClient->addScope('profile');
     }
 
+
     public function index() {
         $users = $this->userModel->getAllUsers();
         renderViewAdmin("view/admin/users/user_list.php", compact('users'), "User List");
@@ -33,7 +34,7 @@ class UserController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = $_POST['name'];
             $email = $_POST['email'];
-            $phone = $_POST['phone'];
+            $phone = $_POST['phone'] ?? null;
             $password = $_POST['password'];
             $role = $_POST['role'];
             $status = $_POST['status'];
@@ -72,10 +73,11 @@ class UserController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = $_POST['name'];
             $email = $_POST['email'];
-            $phone = $_POST['phone'];
+            $phone = $_POST['phone'] ?? null;
             $password = $_POST['password'];
 
             if ($this->userModel->register($name, $email, $phone, $password)) {
+                $_SESSION['success'] = "Đăng kí tài khoản thành công";
                 header("Location: /login");
                 exit;
             } else {
@@ -95,10 +97,11 @@ class UserController {
             if ($user) {
                 $users = $this->userModel->getUserByEmailUser($email);
                 $_SESSION['user'] = $users;
+
                 header("Location: /");
                 exit;
             } else {
-                $error = "Invalid email or password.";
+                $error = "Sai tài khoản hoặc mật khẩu.";
             }
         }
         renderViewUser("view/user/auth/login.php", compact('error'), "Login");
@@ -186,6 +189,7 @@ class UserController {
                 // Clear OTP from the database after successful reset
                 $this->userModel->deleteOTP($email);
                 session_destroy();
+                $_SESSION['success'] = "Thay đổi mật khẩu thành công.";
                 header("Location: /login");
             }
         }
@@ -227,7 +231,7 @@ class UserController {
                     'id' => $googleUser->id,         // ID người dùng từ Google
                     'name' => $googleUser->name,     // Tên người dùng
                     'email' => $googleUser->email,   // Email người dùng
-                    'avatar' => $googleUser->picture // Hình ảnh người dùng
+                    'avatar' => $googleUser->picture, // Hình ảnh người dùng
                 ];
     
                 // Kiểm tra người dùng trong cơ sở dữ liệu
@@ -237,8 +241,9 @@ class UserController {
                     $password = password_hash(uniqid(), PASSWORD_BCRYPT); // Tạo mật khẩu ngẫu nhiên
                     $role = 'user'; // Gán vai trò mặc định
                     $status = 'active';
+                    $phone = null;
     
-                    $this->userModel->createUser($userInfo['name'], $userInfo['email'], $password, $role, $status);
+                    $this->userModel->createUser($userInfo['name'], $userInfo['email'], $phone, $password, $role, $status );
                     $user = $this->userModel->getUserByEmail($userInfo['email']); // Lấy lại thông tin người dùng
                 }
     

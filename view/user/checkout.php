@@ -243,12 +243,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p class="text-success">Mã áp dụng: <strong>${data.code}</strong></p>
                     <button id="cancel-discount" class="btn btn-sm btn-danger">Hủy mã</button>
                 `;
-
                 showAlert('Áp dụng mã giảm giá thành công!', 'success');
                 
                 document.getElementById('cancel-discount').addEventListener('click', function() {
                     cancelDiscount();
                 });
+                
+                // Cập nhật thành tiền cuối cùng
+                updateFinalTotal(data.finalAmount);
             } else {
                 showAlert(data.message);
             }
@@ -280,11 +282,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 showAlert('Hủy mã giảm giá thành công!', 'success');
+                
+                // Cập nhật thành tiền cuối cùng
+                updateFinalTotal(data.originalTotal);
             } else {
                 showAlert(data.message);
             }
         })
         .catch(() => showAlert('Lỗi kết nối đến máy chủ!'));
+    }
+    
+    function updateFinalTotal(finalAmount) {
+        let finalTotalElement = document.querySelector('.text-danger h5:last-child');
+        let deliveryFee = 30000;
+        
+        if (document.querySelector('.delivery').textContent.includes('Miễn phí')){
+            deliveryFee = 0;
+        }
+
+        finalTotalElement.textContent = number_format(finalAmount + deliveryFee) + 'đ';
     }
 });
 </script>

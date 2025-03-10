@@ -84,6 +84,11 @@
                     </a>
                 </li>
                 <li class="sidebar-nav-item">
+                    <a href="/stores" class="text-white text-decoration-none d-flex align-items-center">
+                        <i class="fas fa-store me-2"></i> Stores
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
                     <a href="/settings" class="text-white text-decoration-none d-flex align-items-center">
                         <i class="fas fa-cogs me-2"></i> Settings
                     </a>
